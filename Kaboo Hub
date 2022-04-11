@@ -1,0 +1,1148 @@
+-- Gui to Lua
+-- Version: 3.2
+
+-- Instances:
+
+local KabooHub = Instance.new("ScreenGui")
+local KabooHubFrame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local ImageLabel = Instance.new("ImageLabel")
+local scriptButton = Instance.new("Frame")
+local L = Instance.new("TextButton")
+local UICorner_2 = Instance.new("UICorner")
+local L_2 = Instance.new("TextButton")
+local UICorner_3 = Instance.new("UICorner")
+local L_3 = Instance.new("TextButton")
+local UICorner_4 = Instance.new("UICorner")
+local L_4 = Instance.new("TextButton")
+local UICorner_5 = Instance.new("UICorner")
+local R = Instance.new("TextButton")
+local UICorner_6 = Instance.new("UICorner")
+local R_2 = Instance.new("TextButton")
+local UICorner_7 = Instance.new("UICorner")
+local R_3 = Instance.new("TextButton")
+local UICorner_8 = Instance.new("UICorner")
+local R_4 = Instance.new("TextButton")
+local UICorner_9 = Instance.new("UICorner")
+local Frame = Instance.new("Frame")
+local STARTSHIT = Instance.new("Frame")
+local TextButton = Instance.new("TextButton")
+local UICorner_10 = Instance.new("UICorner")
+local UICorner_11 = Instance.new("UICorner")
+local TextLabel = Instance.new("TextLabel")
+local TextLabel_2 = Instance.new("TextLabel")
+
+--Properties:
+
+KabooHub.Name = "KabooHub"
+KabooHub.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+KabooHub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+KabooHub.DisplayOrder = 1000000000
+
+KabooHubFrame.Name = "KabooHub Frame"
+KabooHubFrame.Parent = KabooHub
+KabooHubFrame.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+KabooHubFrame.Position = UDim2.new(0.213447168, 0, 0.189509302, 0)
+KabooHubFrame.Size = UDim2.new(0, 537, 0, 366)
+
+UICorner.Parent = KabooHubFrame
+
+ImageLabel.Parent = KabooHubFrame
+ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel.BackgroundTransparency = 1.000
+ImageLabel.Position = UDim2.new(0, 0, 0.0163934417, 0)
+ImageLabel.Size = UDim2.new(0, 58, 0, 57)
+ImageLabel.Image = "http://www.roblox.com/asset/?id=9334723523"
+
+scriptButton.Name = "script Button"
+scriptButton.Parent = KabooHubFrame
+scriptButton.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+scriptButton.BorderColor3 = Color3.fromRGB(71, 71, 71)
+scriptButton.Position = UDim2.new(0.0521415286, 0, 0.172131151, 0)
+scriptButton.Size = UDim2.new(0, 481, 0, 275)
+
+L.Name = "L"
+L.Parent = scriptButton
+L.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+L.Position = UDim2.new(0.0623700619, 0, 0.0218181815, 0)
+L.Size = UDim2.new(0, 200, 0, 50)
+L.Font = Enum.Font.Bangers
+L.Text = "Aimbot"
+L.TextColor3 = Color3.fromRGB(255, 255, 255)
+L.TextScaled = true
+L.TextSize = 14.000
+L.TextWrapped = true
+L.MouseButton1Down:connect(function()
+	
+
+	pcall(function()
+		getgenv().Aimbot.Functions:Exit()
+	end)
+
+	--// Environment
+
+	getgenv().Aimbot = {}
+	local Environment = getgenv().Aimbot
+
+	--// Services
+
+	local RunService = game:GetService("RunService")
+	local UserInputService = game:GetService("UserInputService")
+	local HttpService = game:GetService("HttpService")
+	local TweenService = game:GetService("TweenService")
+	local StarterGui = game:GetService("StarterGui")
+	local Players = game:GetService("Players")
+	local Camera = game:GetService("Workspace").CurrentCamera
+
+	--// Variables
+
+	local LocalPlayer = Players.LocalPlayer
+	local Title = "Exunys Developer"
+	local FileNames = {"Aimbot", "Configuration.json", "Drawing.json"}
+	local RequiredDistance = math.huge
+	local Typing = false
+	local Running = false
+	local Animation = nil
+	local ServiceConnections = {RenderSteppedConnection = nil, InputBeganConnection = nil, InputEndedConnection = nil, TypingStartedConnection = nil, TypingEndedConnection = nil}
+
+	--// Script Settings
+
+	Environment.Settings = {
+		SendNotifications = true,
+		SaveSettings = true, -- Re-execute upon changing
+		ReloadOnTeleport = true,
+		Enabled = true,
+		TeamCheck = false,
+		AliveCheck = true,
+		WallCheck = false, -- Laggy
+		Sensitivity = 0, -- Animation length (in seconds) before fully locking onto target
+		TriggerKey = "MouseButton2",
+		Toggle = false,
+		LockPart = "Head" -- Body part to lock on
+	}
+
+	Environment.FOVSettings = {
+		Enabled = true,
+		Visible = true,
+		Amount = 90,
+		Color = "255, 255, 255",
+		LockedColor = "255, 70, 70",
+		Transparency = 0.5,
+		Sides = 60,
+		Thickness = 1,
+		Filled = false
+	}
+
+	Environment.FOVCircle = Drawing.new("Circle")
+	Environment.Locked = nil
+
+	--// Core Functions
+
+	local function Encode(Table)
+		if Table and type(Table) == "table" then
+			local EncodedTable = HttpService:JSONEncode(Table)
+
+			return EncodedTable
+		end
+	end
+
+	local function Decode(String)
+		if String and type(String) == "string" then
+			local DecodedTable = HttpService:JSONDecode(String)
+
+			return DecodedTable
+		end
+	end
+
+	local function GetColor(Color)
+		local R = tonumber(string.match(Color, "([%d]+)[%s]*,[%s]*[%d]+[%s]*,[%s]*[%d]+"))
+		local G = tonumber(string.match(Color, "[%d]+[%s]*,[%s]*([%d]+)[%s]*,[%s]*[%d]+"))
+		local B = tonumber(string.match(Color, "[%d]+[%s]*,[%s]*[%d]+[%s]*,[%s]*([%d]+)"))
+
+		return Color3.fromRGB(R, G, B)
+	end
+
+	local function SendNotification(TitleArg, DescriptionArg, DurationArg)
+		if Environment.Settings.SendNotifications then
+			StarterGui:SetCore("SendNotification", {
+				Title = TitleArg,
+				Text = DescriptionArg,
+				Duration = DurationArg
+			})
+		end
+	end
+
+	--// Functions
+
+	local function SaveSettings()
+		if Environment.Settings.SaveSettings then
+			if isfile(Title.."/"..FileNames[1].."/"..FileNames[2]) then
+				writefile(Title.."/"..FileNames[1].."/"..FileNames[2], Encode(Environment.Settings))
+			end
+
+			if isfile(Title.."/"..FileNames[1].."/"..FileNames[3]) then
+				writefile(Title.."/"..FileNames[1].."/"..FileNames[3], Encode(Environment.FOVSettings))
+			end
+		end
+	end
+
+	local function GetClosestPlayer()
+		if Environment.Locked == nil then
+			if Environment.FOVSettings.Enabled then
+				RequiredDistance = Environment.FOVSettings.Amount
+			else
+				RequiredDistance = math.huge
+			end
+
+			for _, v in next, Players:GetPlayers() do
+				if v ~= LocalPlayer then
+					if v.Character[Environment.Settings.LockPart] then
+						if Environment.Settings.TeamCheck and v.Team == LocalPlayer.Team then continue end
+						if Environment.Settings.AliveCheck and v.Character.Humanoid.Health <= 0 then continue end
+						if Environment.Settings.WallCheck and #(Camera:GetPartsObscuringTarget({v.Character[Environment.Settings.LockPart].Position}, v.Character:GetDescendants())) > 0 then continue end
+
+						local Vector, OnScreen = Camera:WorldToViewportPoint(v.Character[Environment.Settings.LockPart].Position)
+						local Distance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
+
+						if Distance < RequiredDistance and OnScreen then
+							RequiredDistance = Distance
+							Environment.Locked = v
+						end
+					end
+				end
+			end
+		elseif (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(Camera:WorldToViewportPoint(Environment.Locked.Character[Environment.Settings.LockPart].Position).X, Camera:WorldToViewportPoint(Environment.Locked.Character[Environment.Settings.LockPart].Position).Y)).Magnitude > RequiredDistance then
+			Environment.Locked = nil
+			Animation:Cancel()
+			Environment.FOVCircle.Color = GetColor(Environment.FOVSettings.Color)
+		end
+	end
+
+	--// Typing Check
+
+	ServiceConnections.TypingStartedConnection = UserInputService.TextBoxFocused:Connect(function()
+		Typing = true
+	end)
+
+	ServiceConnections.TypingEndedConnection = UserInputService.TextBoxFocusReleased:Connect(function()
+		Typing = false
+	end)
+
+	--// Create, Save & Load Settings
+
+	if Environment.Settings.SaveSettings then
+		if not isfolder(Title) then
+			makefolder(Title)
+		end
+
+		if not isfolder(Title.."/"..FileNames[1]) then
+			makefolder(Title.."/"..FileNames[1])
+		end
+
+		if not isfile(Title.."/"..FileNames[1].."/"..FileNames[2]) then
+			writefile(Title.."/"..FileNames[1].."/"..FileNames[2], Encode(Environment.Settings))
+		else
+			Environment.Settings = Decode(readfile(Title.."/"..FileNames[1].."/"..FileNames[2]))
+		end
+
+		if not isfile(Title.."/"..FileNames[1].."/"..FileNames[3]) then
+			writefile(Title.."/"..FileNames[1].."/"..FileNames[3], Encode(Environment.FOVSettings))
+		else
+			Environment.Visuals = Decode(readfile(Title.."/"..FileNames[1].."/"..FileNames[3]))
+		end
+
+		coroutine.wrap(function()
+			while wait(10) do
+				SaveSettings()
+			end
+		end)()
+	else
+		if isfolder(Title) then
+			delfolder(Title)
+		end
+	end
+
+	local function Load()
+		ServiceConnections.RenderSteppedConnection = RunService.RenderStepped:Connect(function()
+			if Environment.FOVSettings.Enabled and Environment.Settings.Enabled then
+				Environment.FOVCircle.Radius = Environment.FOVSettings.Amount
+				Environment.FOVCircle.Thickness = Environment.FOVSettings.Thickness
+				Environment.FOVCircle.Filled = Environment.FOVSettings.Filled
+				Environment.FOVCircle.NumSides = Environment.FOVSettings.Sides
+				Environment.FOVCircle.Color = GetColor(Environment.FOVSettings.Color)
+				Environment.FOVCircle.Transparency = Environment.FOVSettings.Transparency
+				Environment.FOVCircle.Visible = Environment.FOVSettings.Visible
+				Environment.FOVCircle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+			else
+				Environment.FOVCircle.Visible = false
+			end
+
+			if Running and Environment.Settings.Enabled then
+				GetClosestPlayer()
+
+				if Environment.Settings.Sensitivity > 0 then
+					Animation = TweenService:Create(Camera, TweenInfo.new(Environment.Settings.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)})
+					Animation:Play()
+				else
+					Camera.CFrame = CFrame.new(Camera.CFrame.Position, Environment.Locked.Character[Environment.Settings.LockPart].Position)
+				end
+
+				Environment.FOVCircle.Color = GetColor(Environment.FOVSettings.LockedColor)
+			end
+		end)
+
+		ServiceConnections.InputBeganConnection = UserInputService.InputBegan:Connect(function(Input)
+			if not Typing then
+				pcall(function()
+					if Input.KeyCode == Enum.KeyCode[Environment.Settings.TriggerKey] then
+						if Environment.Settings.Toggle then
+							Running = not Running
+
+							if not Running then
+								Environment.Locked = nil
+								Animation:Cancel()
+								Environment.FOVCircle.Color = GetColor(Environment.FOVSettings.Color)
+							end
+						else
+							Running = true
+						end
+					end
+				end)
+
+				pcall(function()
+					if Input.UserInputType == Enum.UserInputType[Environment.Settings.TriggerKey] then
+						if Environment.Settings.Toggle then
+							Running = not Running
+
+							if not Running then
+								Environment.Locked = nil
+								Animation:Cancel()
+								Environment.FOVCircle.Color = GetColor(Environment.FOVSettings.Color)
+							end
+						else
+							Running = true
+						end
+					end
+				end)
+			end
+		end)
+
+		ServiceConnections.InputEndedConnection = UserInputService.InputEnded:Connect(function(Input)
+			if not Typing then
+				pcall(function()
+					if Input.KeyCode == Enum.KeyCode[Environment.Settings.TriggerKey] then
+						if not Environment.Settings.Toggle then
+							Running = false
+							Environment.Locked = nil
+							Animation:Cancel()
+							Environment.FOVCircle.Color = GetColor(Environment.FOVSettings.Color)
+						end
+					end
+				end)
+
+				pcall(function()
+					if Input.UserInputType == Enum.UserInputType[Environment.Settings.TriggerKey] then
+						if not Environment.Settings.Toggle then
+							Running = false
+							Environment.Locked = nil
+							Animation:Cancel()
+							Environment.FOVCircle.Color = GetColor(Environment.FOVSettings.Color)
+						end
+					end
+				end)
+			end
+		end)
+	end
+
+	--// Functions
+
+	Environment.Functions = {}
+
+	function Environment.Functions:Exit()
+		SaveSettings()
+
+		for _, v in next, ServiceConnections do
+			v:Disconnect()
+		end
+
+		Environment.FOVCircle:Remove()
+
+		getgenv().Aimbot.Functions = nil
+		getgenv().Aimbot = nil
+	end
+
+	function Environment.Functions:Restart()
+		SaveSettings()
+
+		for _, v in next, ServiceConnections do
+			v:Disconnect()
+		end
+
+		Environment.FOVCircle:Remove()
+
+		Load()
+	end
+
+	function Environment.Functions:ResetSettings()
+		Environment.Settings = {
+			SendNotifications = true,
+			SaveSettings = true, -- Re-execute upon changing
+			ReloadOnTeleport = true,
+			Enabled = true,
+			TeamCheck = false,
+			AliveCheck = true,
+			WallCheck = false,
+			Sensitivity = 0, -- Animation length (in seconds) before fully locking onto target
+			TriggerKey = "MouseButton2",
+			Toggle = false,
+			LockPart = "Head" -- Body part to lock on
+		}
+
+		Environment.FOVSettings = {
+			Enabled = true,
+			Visible = true,
+			Amount = 90,
+			Color = "255, 255, 255",
+			LockedColor = "255, 70, 70",
+			Transparency = 0.5,
+			Sides = 60,
+			Thickness = 1,
+			Filled = false
+		}
+
+		SaveSettings()
+
+		for _, v in next, ServiceConnections do
+			v:Disconnect()
+		end
+
+		Load()
+	end
+
+	--// Support Check
+
+	if not Drawing or not writefile or not makefolder then
+		SendNotification(Title, "Your exploit does not support this script", 3); return
+	end
+
+	--// Reload On Teleport
+
+	if Environment.Settings.ReloadOnTeleport then
+		if syn.queue_on_teleport then
+			syn.queue_on_teleport(game:HttpGet("https://pastebin.com/raw/n8wG8BZq"))
+		else
+			SendNotification(Title, "Your exploit does not support \"syn.queue_on_teleport()\"")
+		end
+	end
+
+	--// Load
+
+	Load(); SendNotification(Title, "Loaded", 5)
+	
+	UICorner_2.Parent = L
+	end)
+
+L_2.Name = "L"
+L_2.Parent = scriptButton
+L_2.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+L_2.Position = UDim2.new(0.0623700619, 0, 0.792727232, 0)
+L_2.Size = UDim2.new(0, 200, 0, 50)
+L_2.Font = Enum.Font.Bangers
+L_2.Text = "Noclip"
+L_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+L_2.TextScaled = true
+L_2.TextSize = 14.000
+L_2.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+L_2.TextWrapped = true
+L_2.MouseButton1Down:connect(function()
+	
+	local noclip = true -- Gets if you want the noclip
+	char = game.Players.LocalPlayer.Character -- Gets your player
+	while true do -- Make sure someone is in game
+		if noclip == true then
+			for _,v in pairs(char:children()) do
+				pcall(function()
+					if v.className == "Part" then
+						v.CanCollide = false
+					end
+				end)
+			end
+		end
+		game:service("RunService").Stepped:wait()
+	end
+	
+
+	UICorner_3.Parent = L_2
+	
+	end)
+
+L_3.Name = "L"
+L_3.Parent = scriptButton
+L_3.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+L_3.Position = UDim2.new(0.0623700619, 0, 0.530909061, 0)
+L_3.Size = UDim2.new(0, 200, 0, 50)
+L_3.Font = Enum.Font.Bangers
+L_3.Text = "Inf Jump"
+L_3.TextColor3 = Color3.fromRGB(255, 255, 255)
+L_3.TextScaled = true
+L_3.TextSize = 14.000
+L_3.TextWrapped = true
+L_3.MouseButton1Down:connect(function()
+
+_G.infinjump = true
+
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+	if _G.infinjump then
+		if k:byte() == 32 then
+			Humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+			Humanoid:ChangeState("Jumping")
+			wait(0.1)
+			Humanoid:ChangeState("Seated")
+		end
+	end
+end)
+
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+Mouse.KeyDown:connect(function(k)
+	k = k:lower()
+	if k == "f" then
+		if _G.infinjump == true then
+			_G.infinjump = false
+		else
+			_G.infinjump = true
+		end
+	end
+end)
+
+	UICorner_4.Parent = L_3
+	end)
+
+L_4.Name = "L"
+L_4.Parent = scriptButton
+L_4.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+L_4.Position = UDim2.new(0.0623700619, 0, 0.276363611, 0)
+L_4.Size = UDim2.new(0, 200, 0, 50)
+L_4.Font = Enum.Font.Bangers
+L_4.Text = "ESP"
+L_4.TextColor3 = Color3.fromRGB(255, 255, 255)
+L_4.TextScaled = true
+L_4.TextSize = 14.000
+L_4.TextWrapped = true
+L_4.MouseButton1Down:connect(function()
+	
+	-- Made by Blissful#4992
+	local Player = game:GetService("Players").LocalPlayer
+	local Camera = game:GetService("Workspace").CurrentCamera
+	local Mouse = Player:GetMouse()
+
+	local function Dist(pointA, pointB) -- magnitude errors for some reason  : (
+		return math.sqrt(math.pow(pointA.X - pointB.X, 2) + math.pow(pointA.Y - pointB.Y, 2))
+	end
+
+	local function GetClosest(points, dest)
+		local min  = math.huge 
+		local closest = nil
+		for _,v in pairs(points) do
+			local dist = Dist(v, dest)
+			if dist < min then
+				min = dist
+				closest = v
+			end
+		end
+		return closest
+	end
+
+	local function DrawESP(plr)
+		local Box = Drawing.new("Quad")
+		Box.Visible = false
+		Box.PointA = Vector2.new(0, 0)
+		Box.PointB = Vector2.new(0, 0)
+		Box.PointC = Vector2.new(0, 0)
+		Box.PointD = Vector2.new(0, 0)
+		Box.Color = Color3.fromRGB(255, 255, 255)
+		Box.Thickness = 2
+		Box.Transparency = 1
+
+		local function Update()
+			local c
+			c = game:GetService("RunService").RenderStepped:Connect(function()
+				if plr.Character ~= nil and plr.Character:FindFirstChildOfClass("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character:FindFirstChildOfClass("Humanoid").Health > 0 and plr.Character:FindFirstChild("Head") ~= nil then
+					local pos, vis = Camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+					if vis then 
+						local points = {}
+						local c = 0
+						for _,v in pairs(plr.Character:GetChildren()) do
+							if v:IsA("BasePart") then
+								c = c + 1
+								local p = Camera:WorldToViewportPoint(v.Position)
+								if v.Name == "HumanoidRootPart" then
+									p = Camera:WorldToViewportPoint((v.CFrame * CFrame.new(0, 0, -v.Size.Z)).p)
+								elseif v.Name == "Head" then
+									p = Camera:WorldToViewportPoint((v.CFrame * CFrame.new(0, v.Size.Y/2, v.Size.Z/1.25)).p)
+								elseif string.match(v.Name, "Left") then
+									p = Camera:WorldToViewportPoint((v.CFrame * CFrame.new(-v.Size.X/2, 0, 0)).p)
+								elseif string.match(v.Name, "Right") then
+									p = Camera:WorldToViewportPoint((v.CFrame * CFrame.new(v.Size.X/2, 0, 0)).p)
+								end
+								points[c] = p
+							end
+						end
+						local Left = GetClosest(points, Vector2.new(0, pos.Y))
+						local Right = GetClosest(points, Vector2.new(Camera.ViewportSize.X, pos.Y))
+						local Top = GetClosest(points, Vector2.new(pos.X, 0))
+						local Bottom = GetClosest(points, Vector2.new(pos.X, Camera.ViewportSize.Y))
+
+						if Left ~= nil and Right ~= nil and Top ~= nil and Bottom ~= nil then
+							Box.PointA = Vector2.new(Right.X, Top.Y)
+							Box.PointB = Vector2.new(Left.X, Top.Y)
+							Box.PointC = Vector2.new(Left.X, Bottom.Y)
+							Box.PointD = Vector2.new(Right.X, Bottom.Y)
+
+							Box.Visible = true
+						else 
+							Box.Visible = false
+						end
+					else 
+						Box.Visible = false
+					end
+				else
+					Box.Visible = false
+					if game.Players:FindFirstChild(plr.Name) == nil then
+						c:Disconnect()
+					end
+				end
+			end)
+		end
+		coroutine.wrap(Update)()
+	end
+
+	for _,v in pairs(game:GetService("Players"):GetChildren()) do
+		if v.Name ~= Player.Name then 
+			DrawESP(v)
+		end
+	end
+
+	game:GetService("Players").PlayerAdded:Connect(function(v)
+		DrawESP(v)
+	end)
+
+UICorner_5.Parent = L_4
+end)
+
+R.Name = "R"
+R.Parent = scriptButton
+R.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+R.Position = UDim2.new(0.521829486, 0, 0.792727232, 0)
+R.Size = UDim2.new(0, 200, 0, 50)
+R.Font = Enum.Font.Bangers
+R.Text = "Rejoin"
+R.TextColor3 = Color3.fromRGB(255, 255, 255)
+R.TextScaled = true
+R.TextSize = 14.000
+R.TextWrapped = true
+R.MouseButton1Down:connect(function()
+
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local Rejoin = coroutine.create(function()
+	local Success, ErrorMessage = pcall(function()
+		TeleportService:Teleport(game.PlaceId, LocalPlayer)
+	end)
+
+	if ErrorMessage and not Success then
+		warn(ErrorMessage)
+	end
+end)
+
+coroutine.resume(Rejoin)
+UICorner_6.Parent = R
+end)
+
+R_2.Name = "R"
+R_2.Parent = scriptButton
+R_2.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+R_2.Position = UDim2.new(0.521829486, 0, 0.530909061, 0)
+R_2.Size = UDim2.new(0, 200, 0, 50)
+R_2.Font = Enum.Font.Bangers
+R_2.Text = "Walkspeed"
+R_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+R_2.TextScaled = true
+R_2.TextSize = 14.000
+R_2.TextWrapped = true
+R_2.MouseButton1Down:connect(function()
+	
+	--// Services
+
+	local UserInputService = game:GetService("UserInputService")
+	local RunService = game:GetService("RunService")
+	local Players = game:GetService("Players")
+
+	--// Variables
+
+	local Key = Enum.KeyCode.E
+	local Flying = false
+	local Typing = false
+
+	--// Typing Check
+
+	UserInputService.TextBoxFocused:Connect(function()
+		Typing = true
+	end)
+
+	UserInputService.TextBoxFocusReleased:Connect(function()
+		Typing = false
+	end)
+
+	--// Main
+
+	RunService.RenderStepped:Connect(function()
+		if Flying then
+			Players.LocalPlayer.Character.Humanoid:ChangeState(4)
+			Players.LocalPlayer.Character.Humanoid.WalkSpeed = 100
+		end
+	end)
+
+	UserInputService.InputBegan:Connect(function(Input)
+		if Input.KeyCode == Key then
+			Flying = not Flying
+
+			if not Flying then
+				Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16 
+			end
+		end
+	end)
+
+UICorner_7.Parent = R_2
+end)
+
+R_3.Name = "R"
+R_3.Parent = scriptButton
+R_3.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+R_3.Position = UDim2.new(0.521829486, 0, 0.276363611, 0)
+R_3.Size = UDim2.new(0, 200, 0, 50)
+R_3.Font = Enum.Font.Bangers
+R_3.Text = "Crosshair"
+R_3.TextColor3 = Color3.fromRGB(255, 255, 255)
+R_3.TextScaled = true
+R_3.TextSize = 14.000
+R_3.TextWrapped = true
+R_3.MouseButton1Down:connect(function()
+
+--// Preventing Multiple Processes
+
+pcall(function()
+	getgenv().Crosshair.Functions:Exit()
+end)
+
+--// Environment
+
+getgenv().Crosshair = {}
+local Environment = getgenv().Crosshair
+
+--// Services
+
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = game:GetService("Workspace").CurrentCamera
+
+--// Variables
+
+local Title = "KabooHub"
+local FileNames = {"Crosshair", "Configuration.json", "Crosshair.json"}
+local AxisX, AxisY = nil, nil
+local AxisConnection, CrosshairConnection = nil, nil
+
+--// Script Settings
+
+Environment.Settings = {
+	SendNotifications = true,
+	SaveSettings = true, -- Re-execute upon changing
+	ReloadOnTeleport = true,
+	Enabled = true,
+	ToMouse = true
+}
+
+--// Crosshair Settings
+
+Environment.CrosshairSettings = {
+	Size = 12,
+	Thickness = 1,
+	Color = "0, 255, 0",
+	Transparency = 1,
+	GapSize = 5,
+	CenterDot = false,
+	CenterDotColor = "0, 255, 0",
+	CenterDotSize = 1,
+	CenterDotTransparency = 1,
+	CenterDotFilled = true,
+}
+
+Environment.Construction = {
+	LeftLine = Drawing.new("Line"),
+	RightLine = Drawing.new("Line"),
+	TopLine = Drawing.new("Line"),
+	BottomLine = Drawing.new("Line"),
+	CenterDot = Drawing.new("Circle")
+}
+
+--// Core Functions
+
+local function Encode(Table)
+	if Table and type(Table) == "table" then
+		local EncodedTable = HttpService:JSONEncode(Table)
+
+		return EncodedTable
+	end
+end
+
+local function Decode(String)
+	if String and type(String) == "string" then
+		local DecodedTable = HttpService:JSONDecode(String)
+
+		return DecodedTable
+	end
+end
+
+local function SendNotification(TitleArg, DescriptionArg, DurationArg)
+	if Environment.Settings.SendNotifications then
+		StarterGui:SetCore("SendNotification", {
+			Title = TitleArg,
+			Text = DescriptionArg,
+			Duration = DurationArg
+		})
+	end
+end
+
+local function GetColor(Color)
+	local R = tonumber(string.match(Color, "([%d]+)[%s]*,[%s]*[%d]+[%s]*,[%s]*[%d]+"))
+	local G = tonumber(string.match(Color, "[%d]+[%s]*,[%s]*([%d]+)[%s]*,[%s]*[%d]+"))
+	local B = tonumber(string.match(Color, "[%d]+[%s]*,[%s]*[%d]+[%s]*,[%s]*([%d]+)"))
+
+	return Color3.fromRGB(R, G, B)
+end
+
+local function Load()
+	AxisConnection, CrosshairConnection = RunService.RenderStepped:Connect(function()
+		if Environment.Settings.ToMouse then
+			AxisX, AxisY = UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y
+		else
+			AxisX, AxisY = Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2
+		end
+	end), RunService.RenderStepped:Connect(function()
+
+		--// Left Line
+
+		Environment.Construction.LeftLine.Visible = Environment.Settings.Enabled
+		Environment.Construction.LeftLine.Color = GetColor(Environment.CrosshairSettings.Color)
+		Environment.Construction.LeftLine.Thickness = Environment.CrosshairSettings.Thickness
+		Environment.Construction.LeftLine.Transparency = Environment.CrosshairSettings.Transparency
+
+		Environment.Construction.LeftLine.From = Vector2.new(AxisX + Environment.CrosshairSettings.GapSize, AxisY)
+		Environment.Construction.LeftLine.To = Vector2.new(AxisX + Environment.CrosshairSettings.Size, AxisY)
+
+		--// Right Line
+
+		Environment.Construction.RightLine.Visible = Environment.Settings.Enabled
+		Environment.Construction.RightLine.Color = GetColor(Environment.CrosshairSettings.Color)
+		Environment.Construction.RightLine.Thickness = Environment.CrosshairSettings.Thickness
+		Environment.Construction.RightLine.Transparency = Environment.CrosshairSettings.Transparency
+
+		Environment.Construction.RightLine.From = Vector2.new(AxisX - Environment.CrosshairSettings.GapSize, AxisY)
+		Environment.Construction.RightLine.To = Vector2.new(AxisX - Environment.CrosshairSettings.Size, AxisY)
+
+		--// Top Line
+
+		Environment.Construction.TopLine.Visible = Environment.Settings.Enabled
+		Environment.Construction.TopLine.Color = GetColor(Environment.CrosshairSettings.Color)
+		Environment.Construction.TopLine.Thickness = Environment.CrosshairSettings.Thickness
+		Environment.Construction.TopLine.Transparency = Environment.CrosshairSettings.Transparency
+
+		Environment.Construction.TopLine.From = Vector2.new(AxisX, AxisY + Environment.CrosshairSettings.GapSize)
+		Environment.Construction.TopLine.To = Vector2.new(AxisX, AxisY + Environment.CrosshairSettings.Size)
+
+		--// Bottom Line
+
+		Environment.Construction.BottomLine.Visible = Environment.Settings.Enabled
+		Environment.Construction.BottomLine.Color = GetColor(Environment.CrosshairSettings.Color)
+		Environment.Construction.BottomLine.Thickness = Environment.CrosshairSettings.Thickness
+		Environment.Construction.BottomLine.Transparency = Environment.CrosshairSettings.Transparency
+
+		Environment.Construction.BottomLine.From = Vector2.new(AxisX, AxisY - Environment.CrosshairSettings.GapSize)
+		Environment.Construction.BottomLine.To = Vector2.new(AxisX, AxisY - Environment.CrosshairSettings.Size)
+
+		--// Center Dot
+
+		Environment.Construction.CenterDot.Visible = Environment.Settings.Enabled and Environment.CrosshairSettings.CenterDot
+		Environment.Construction.CenterDot.Color = GetColor(Environment.CrosshairSettings.CenterDotColor)
+		Environment.Construction.CenterDot.Radius = Environment.CrosshairSettings.CenterDotSize
+		Environment.Construction.CenterDot.Transparency = Environment.CrosshairSettings.CenterDotTransparency
+		Environment.Construction.CenterDot.Filled = Environment.CrosshairSettings.CenterDotFilled
+
+		Environment.Construction.CenterDot.Position = Vector2.new(AxisX, AxisY)
+	end)
+end
+
+--// Functions
+
+local function SaveSettings()
+	if isfile(Title.."/"..FileNames[1].."/"..FileNames[2]) then
+		writefile(Title.."/"..FileNames[1].."/"..FileNames[2], Encode(Environment.Settings))
+	end
+
+	if isfile(Title.."/"..FileNames[1].."/"..FileNames[3]) then
+		writefile(Title.."/"..FileNames[1].."/"..FileNames[3], Encode(Environment.CrosshairSettings))
+	end
+end
+
+if Environment.Settings.SaveSettings then
+	if not isfolder(Title) then
+		makefolder(Title)
+	end
+
+	if not isfolder(Title.."/"..FileNames[1]) then
+		makefolder(Title.."/"..FileNames[1])
+	end
+
+	if not isfile(Title.."/"..FileNames[1].."/"..FileNames[2]) then
+		writefile(Title.."/"..FileNames[1].."/"..FileNames[2], Encode(Environment.Settings))
+	else
+		Environment.Settings = Decode(readfile(Title.."/"..FileNames[1].."/"..FileNames[2]))
+	end
+
+	if not isfile(Title.."/"..FileNames[1].."/"..FileNames[3]) then
+		writefile(Title.."/"..FileNames[1].."/"..FileNames[3], Encode(Environment.CrosshairSettings))
+	else
+		Environment.CrosshairSettings = Decode(readfile(Title.."/"..FileNames[1].."/"..FileNames[3]))
+	end
+
+	coroutine.wrap(function()
+		while wait(10) do
+			SaveSettings()
+		end
+	end)()
+else
+	if isfolder(Title) then
+		delfolder(Title)
+	end
+end
+
+--// Reload On Teleport
+
+if Environment.Settings.ReloadOnTeleport then
+	if syn.queue_on_teleport then
+		syn.queue_on_teleport(game:HttpGet("https://pastebin.com/raw/4L7an7MY"))
+	else
+		SendNotification(Title, "Your exploit does not support \"syn.queue_on_teleport()\"")
+	end
+end
+
+--// Script Functions
+
+Environment.Functions = {}
+
+function Environment.Functions:Exit()
+	table.foreach(Environment.Construction, function(_, Value)
+		Value:Remove()
+	end)
+
+	AxisConnection:Disconnect(); CrosshairConnection:Disconnect()
+
+	getgenv().Crosshair = nil
+end
+
+function Environment.Functions:Restart()
+	table.foreach(Environment.Construction, function(_, Value)
+		Value:Remove()
+	end)
+
+	AxisConnection:Disconnect(); CrosshairConnection:Disconnect()
+
+	Load()
+end
+
+function Environment.Functions:ResetSettings()
+	Environment.Settings = {
+		SendNotifications = true,
+		SaveSettings = true, -- Re-execute upon changing
+		ReloadOnTeleport = true,
+		Enabled = true,
+		ToMouse = true
+	}
+
+	Environment.CrosshairSettings = {
+		Size = 12,
+		Thickness = 1,
+		Color = "0, 255, 0",
+		Transparency = 1,
+		GapSize = 5,
+		CenterDot = false,
+		CenterDotColor = "0, 255, 0",
+		CenterDotSize = 1,
+		CenterDotTransparency = 1,
+		CenterDotFilled = true,
+	}
+
+	SaveSettings()
+end
+
+function Environment.Functions:SetMouseIcon(Value)
+	if Value == nil then Value = true end
+
+	UserInputService.MouseIconEnabled = Value
+end
+
+function Environment.Functions:GetDocumentation()
+	setclipboard("https://github.com/Exunys/Crosshair-V2"); SendNotification(Title, "aids", 3)
+end
+
+--// API Check
+
+if not Drawing or not writefile or not makefolder then
+	SendNotification(Title, "Your exploit does not support this script", 3); return
+end
+
+--// Load
+
+Load(); SendNotification(Title, "CrossHair Loaded KabooHub", 5)
+
+	UICorner_8.Parent = R_3
+	end)
+
+R_4.Name = "R"
+R_4.Parent = scriptButton
+R_4.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+R_4.Position = UDim2.new(0.521829486, 0, 0.0218181815, 0)
+R_4.Size = UDim2.new(0, 200, 0, 50)
+R_4.Font = Enum.Font.Bangers
+R_4.Text = "Anti Aim"
+R_4.TextColor3 = Color3.fromRGB(255, 255, 255)
+R_4.TextScaled = true
+R_4.TextSize = 14.000
+R_4.TextWrapped = true
+R_4.MouseButton1Down:connect(function()
+
+game.Players.LocalPlayer.Character.Humanoid.JumpPower = 0
+
+power = 143 
+
+game:GetService('RunService').Stepped:connect(function()
+	game.Players.LocalPlayer.Character.Head.CanCollide = false
+	game.Players.LocalPlayer.Character.UpperTorso.CanCollide = false
+	game.Players.LocalPlayer.Character.LowerTorso.CanCollide = false
+	game.Players.LocalPlayer.Character.HumanoidRootPart.CanCollide = false
+end)
+wait(.1)
+local bambam = Instance.new("BodyThrust")
+bambam.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+bambam.Force = Vector3.new(power,0,power)
+bambam.Location = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+
+local noclip = true -- Gets if you want the noclip
+char = game.Players.LocalPlayer.Character -- Gets your player
+while true do -- Make sure someone is in game
+	if noclip == true then
+		for _,v in pairs(char:children()) do
+			pcall(function()
+				if v.className == "Part" then
+					v.CanCollide = false
+				end
+			end)
+		end
+	end
+	game:service("RunService").Stepped:wait()
+end
+
+
+	UICorner_9.Parent = R_4
+	end)
+
+Frame.Parent = KabooHubFrame
+Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0, 0, -0.0382513665, 0)
+Frame.Size = UDim2.new(0, 537, 0, 20)
+
+STARTSHIT.Name = "START SHIT"
+STARTSHIT.Parent = KabooHub
+STARTSHIT.BackgroundColor3 = Color3.fromRGB(71, 71, 71)
+STARTSHIT.Position = UDim2.new(0.335112065, 0, 0.382402718, 0)
+STARTSHIT.Size = UDim2.new(0, 308, 0, 139)
+STARTSHIT.Visible = false
+
+TextButton.Parent = STARTSHIT
+TextButton.BackgroundColor3 = Color3.fromRGB(91, 91, 91)
+TextButton.Position = UDim2.new(0.149665445, 0, 0.397745907, 0)
+TextButton.Size = UDim2.new(0, 213, 0, 58)
+TextButton.Font = Enum.Font.SourceSansSemibold
+TextButton.Text = "LOAD"
+TextButton.TextColor3 = Color3.fromRGB(71, 71, 71)
+TextButton.TextScaled = true
+TextButton.TextSize = 33.000
+TextButton.TextWrapped = true
+
+UICorner_10.Parent = TextButton
+
+UICorner_11.Parent = STARTSHIT
+
+TextLabel.Parent = STARTSHIT
+TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.BackgroundTransparency = 1.000
+TextLabel.Position = UDim2.new(0, 0, 0.107913665, 0)
+TextLabel.Size = UDim2.new(0, 308, 0, 40)
+TextLabel.Font = Enum.Font.ArialBold
+TextLabel.Text = "KabooHub"
+TextLabel.TextColor3 = Color3.fromRGB(91, 91, 91)
+TextLabel.TextSize = 54.000
+TextLabel.TextWrapped = true
+
+TextLabel_2.Parent = STARTSHIT
+TextLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_2.BackgroundTransparency = 1.000
+TextLabel_2.Position = UDim2.new(-0.0584416389, 0, 0.815012097, 0)
+TextLabel_2.Size = UDim2.new(0, 74, 0, 25)
+TextLabel_2.Font = Enum.Font.ArialBold
+TextLabel_2.Text = "v1"
+TextLabel_2.TextColor3 = Color3.fromRGB(91, 91, 91)
+TextLabel_2.TextSize = 17.000
+TextLabel_2.TextWrapped = true
+
+-- Scripts:
+
+local function WWYNDPZ_fake_script() -- KabooHubFrame.SmoothDragging 
+	local script = Instance.new('LocalScript', KabooHubFrame)
+
+	--[[
+			Not made by ww9l, take this and put into a frame
+			No need for credits, this belonged to Ethereal Hub
+			And they borrowed me for this model.
+																						]]--
+
+
+
+
+
+
+
+	local a=game:GetService("UserInputService")function drag(b)dragToggle=nil dragSpeed=0.23 dragInput=nil dragStart=nil dragPos=nil function updateInput(a)Delta=a.Position-dragStart Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+Delta.X,startPos.Y.Scale,startPos.Y.Offset+Delta.Y)game:GetService("TweenService"):Create(b,TweenInfo.new(0.25),{Position=Position}):Play()end b.InputBegan:Connect(function(c)if(c.UserInputType==Enum.UserInputType.MouseButton1 or c.UserInputType==Enum.UserInputType.Touch)and a:GetFocusedTextBox()==nil then dragToggle=true dragStart=c.Position startPos=b.Position c.Changed:Connect(function()if c.UserInputState==Enum.UserInputState.End then dragToggle=false end end)end end)b.InputChanged:Connect(function(a)if a.UserInputType==Enum.UserInputType.MouseMovement or a.UserInputType==Enum.UserInputType.Touch then dragInput=a end end)game:GetService("UserInputService").InputChanged:Connect(function(a)if a==dragInput and dragToggle then updateInput(a)end end)end drag(script.Parent)
+end
+coroutine.wrap(WWYNDPZ_fake_script)()
+local function BIDZLQ_fake_script() -- TextButton.Open/Close (PUT ME IN A TEXTBUTTON) 
+	local script = Instance.new('LocalScript', TextButton)
+
+	script.Parent.MouseButton1Click:connect(function()
+		script.Parent.Parent.Parent["START SHIT"].Visible = true
+
+		script.Parent.Parent.Parent["KabooHub Frame"].Visible = true
+		script.Parent.Parent.Parent["START SHIT"].Visible = false
+	end)
+
+
+end
+coroutine.wrap(BIDZLQ_fake_script)()
